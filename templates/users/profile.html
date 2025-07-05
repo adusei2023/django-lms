@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" width="150" height="150" alt="Profile Picture">
+                    {% else %}
+                        <div class="bg-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                            <span class="text-white" style="font-size: 3rem;">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    <h4>{{ user.get_full_name|default:user.username }}</h4>
+                    <p class="text-muted mb-2">{{ profile.get_role_display }}</p>
+                    <p class="text-muted small">Member since {{ user.date_joined|date:"F Y" }}</p>
+                    
+                    <a href="{% url 'users:profile_update' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit me-1"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Contact Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Email</small>
+                        <div>{{ user.email }}</div>
+                    </div>
+                    {% if profile.phone_number %}
+                    <div class="mb-3">
+                        <small class="text-muted">Phone</small>
+                        <div>{{ profile.phone_number }}</div>
+                    </div>
+                    {% endif %}
+                    {% if profile.location %}
+                    <div class="mb-3">
+                        <small class="text-muted">Location</small>
+                        <div>{{ profile.location }}</div>
+                    </div>
+                    {% endif %}
+                    {% if profile.date_of_birth %}
+                    <div class="mb-3">
+                        <small class="text-muted">Date of Birth</small>
+                        <div>{{ profile.date_of_birth|date:"F d, Y" }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">About</h5>
+                </div>
+                <div class="card-body">
+                    {% if profile.bio %}
+                        <p>{{ profile.bio|linebreaks }}</p>
+                    {% else %}
+                        <p class="text-muted">No bio available. <a href="{% url 'users:profile_update' %}">Add one</a> to tell others about yourself.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Learning Statistics -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Learning Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="border rounded p-3">
+                                <h4 class="text-primary mb-0">{{ user.enrollments.count }}</h4>
+                                <small class="text-muted">Enrolled Courses</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="border rounded p-3">
+                                <h4 class="text-success mb-0">{{ user.enrollments.filter.count }}</h4>
+                                <small class="text-muted">Completed Courses</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="border rounded p-3">
+                                <h4 class="text-info mb-0">{{ user.certificates.count }}</h4>
+                                <small class="text-muted">Certificates</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="border rounded p-3">
+                                <h4 class="text-warning mb-0">{{ user.reviews.count }}</h4>
+                                <small class="text-muted">Reviews Given</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for enrollment in user.enrollments.all|slice:":5" %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Enrolled in {{ enrollment.course.title }}</h6>
+                                <small class="text-muted">{{ enrollment.enrolled_at|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No recent activity</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    .timeline-marker {
+        position: absolute;
+        left: -1.5rem;
+        top: 0.25rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #dee2e6;
+    }
+    .timeline-content {
+        padding-left: 1rem;
+    }
+</style>
+{% endblock %}

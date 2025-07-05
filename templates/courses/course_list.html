@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Courses - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .course-card {
+        transition: transform 0.2s;
+        height: 100%;
+    }
+    .course-card:hover {
+        transform: translateY(-5px);
+    }
+    .course-thumbnail {
+        height: 200px;
+        object-fit: cover;
+    }
+    .rating-stars {
+        color: #ffc107;
+    }
+    .filter-sidebar {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-md-3">
+            <div class="filter-sidebar">
+                <h5 class="mb-4">Filter Courses</h5>
+                
+                <!-- Search -->
+                <form method="get" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Search courses..." value="{{ search_query }}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    {% if request.GET.category %}<input type="hidden" name="category" value="{{ request.GET.category }}">{% endif %}
+                    {% if request.GET.level %}<input type="hidden" name="level" value="{{ request.GET.level }}">{% endif %}
+                    {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
+                </form>
+                
+                <!-- Categories -->
+                <div class="mb-4">
+                    <h6>Categories</h6>
+                    <div class="list-group">
+                        <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if request.GET.level %}level={{ request.GET.level }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}{% endif %}" 
+                           class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                            All Categories
+                        </a>
+                        {% for category in categories %}
+                        <a href="?category={{ category.id }}{% if search_query %}&search={{ search_query }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
+                           class="list-group-item list-group-item-action {% if current_category == category.id|stringformat:'s' %}active{% endif %}">
+                            {{ category.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Level Filter -->
+                <div class="mb-4">
+                    <h6>Level</h6>
+                    <div class="list-group">
+                        <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}{% endif %}" 
+                           class="list-group-item list-group-item-action {% if not current_level %}active{% endif %}">
+                            All Levels
+                        </a>
+                        <a href="?level=beginner{% if search_query %}&search={{ search_query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
+                           class="list-group-item list-group-item-action {% if current_level == 'beginner' %}active{% endif %}">
+                            Beginner
+                        </a>
+                        <a href="?level=intermediate{% if search_query %}&search={{ search_query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
+                           class="list-group-item list-group-item-action {% if current_level == 'intermediate' %}active{% endif %}">
+                            Intermediate
+                        </a>
+                        <a href="?level=advanced{% if search_query %}&search={{ search_query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
+                           class="list-group-item list-group-item-action {% if current_level == 'advanced' %}active{% endif %}">
+                            Advanced
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>All Courses</h2>
+                    <p class="text-muted">{{ page_obj.paginator.count }} course{{ page_obj.paginator.count|pluralize }} found</p>
+                </div>
+                
+                <!-- Sort Options -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Sort by
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.level %}level={{ request.GET.level }}&{% endif %}sort=-created_at">Newest</a></li>
+                        <li><a class="dropdown-item" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.level %}level={{ request.GET.level }}&{% endif %}sort=price_low">Price: Low to High</a></li>
+                        <li><a class="dropdown-item" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.level %}level={{ request.GET.level }}&{% endif %}sort=price_high">Price: High to Low</a></li>
+                        <li><a class="dropdown-item" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.level %}level={{ request.GET.level }}&{% endif %}sort=rating">Highest Rated</a></li>
+                        <li><a class="dropdown-item" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.level %}level={{ request.GET.level }}&{% endif %}sort=popular">Most Popular</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Course Grid -->
+            <div class="row">
+                {% for course in courses %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card course-card shadow-sm">
+                        {% if course.cover_image %}
+                        <img src="{{ course.cover_image.url }}" class="card-img-top course-thumbnail" alt="{{ course.title }}">
+                        {% else %}
+                        <div class="card-img-top course-thumbnail bg-light d-flex align-items-center justify-content-center">
+                            <i class="fas fa-graduation-cap fa-3x text-muted"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ course.title|truncatechars:50 }}</h5>
+                            <p class="card-text text-muted small mb-2">
+                                by {{ course.instructor.get_full_name|default:course.instructor.username }}
+                            </p>
+                            <p class="card-text">{{ course.description|truncatechars:100 }}</p>
+                            
+                            <div class="mt-auto">
+                                <!-- Rating -->
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="rating-stars me-2">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="far fa-star"></i>
+                                    </div>
+                                    <small class="text-muted">(4.0)</small>
+                                </div>
+                                
+                                <!-- Price and Students -->
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-primary">{{ course.get_difficulty_level_display }}</span>
+                                    <small class="text-muted">0 students</small>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    {% if course.price > 0 %}
+                                    <h6 class="text-success mb-0">${{ course.price }}</h6>
+                                    {% else %}
+                                    <h6 class="text-success mb-0">Free</h6>
+                                    {% endif %}
+                                    <a href="{% url 'courses:course_detail' course.pk %}" class="btn btn-primary btn-sm">View Course</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h4>No courses found</h4>
+                        <p class="text-muted">Try adjusting your search criteria or filters.</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Course pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

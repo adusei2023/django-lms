@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Courses - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1>Courses</h1>
+    
+    <div class="row">
+        {% for course in courses %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ course.title }}</h5>
+                    <p class="card-text">{{ course.description|truncatechars:100 }}</p>
+                    <p class="text-muted">Instructor: {{ course.instructor.username }}</p>
+                    <p class="text-muted">Level: {{ course.difficulty_level }}</p>
+                    <a href="{% url 'courses:course_detail' course.pk %}" class="btn btn-primary">View Course</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p>No courses found.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

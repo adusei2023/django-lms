@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Update Profile - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Update Profile</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="id_first_name" name="first_name" value="{{ user.first_name }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="id_last_name" name="last_name" value="{{ user.last_name }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="id_email" name="email" value="{{ user.email }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label>
+                            {{ form.bio }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.avatar.id_for_label }}" class="form-label">Profile Picture</label>
+                            {{ form.avatar }}
+                            {% if form.instance.avatar %}
+                                <div class="mt-2">
+                                    <img src="{{ form.instance.avatar.url }}" class="rounded" width="100" height="100" alt="Current avatar">
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
+                                {{ form.phone_number }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of Birth</label>
+                                {{ form.date_of_birth }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
+                                {{ form.location }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.timezone.id_for_label }}" class="form-label">Timezone</label>
+                                {{ form.timezone }}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'users:profile' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

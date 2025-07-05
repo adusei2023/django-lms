@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ lesson.title }} - {{ course.title }} - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lesson-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .video-player {
+        background: #000;
+        border-radius: 10px;
+        position: relative;
+        aspect-ratio: 16/9;
+    }
+    .lesson-sidebar {
+        background: #f8f9fa;
+        border-radius: 10px;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    .lesson-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid #dee2e6;
+        transition: background-color 0.2s;
+    }
+    .lesson-item:hover {
+        background-color: #e9ecef;
+    }
+    .lesson-item.active {
+        background-color: #e3f2fd;
+        border-left: 4px solid #2196f3;
+    }
+    .lesson-completed {
+        color: #28a745;
+    }
+    .lesson-navigation {
+        background: white;
+        border-top: 1px solid #dee2e6;
+        padding: 1rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lesson-container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'courses:course_list' %}">Courses</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'courses:course_detail' course.pk %}">{{ course.title|truncatechars:30 }}</a></li>
+            <li class="breadcrumb-item active">{{ lesson.title|truncatechars:30 }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <!-- Video/Content Area -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body p-0">
+                    <!-- Video Player -->
+                    {% if lesson.video_url %}
+                    <div class="video-player">
+                        <iframe 
+                            src="{{ lesson.video_url }}" 
+                            class="w-100 h-100 rounded-top"
+                            style="border: none;"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    {% else %}
+                    <div class="video-player d-flex align-items-center justify-content-center text-white">
+                        <div class="text-center">
+                            <i class="fas fa-play-circle fa-5x mb-3"></i>
+                            <h4>No video available</h4>
+                            <p>This lesson contains text content only</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Lesson Content -->
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div>
+                                <h2>{{ lesson.title }}</h2>
+                                <p class="text-muted mb-0">{{ module.title }}</p>
+                            </div>
+                            <div>
+                                {% if lesson_progress.completed %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Completed
+                                </span>
+                                {% else %}
+                                <form method="post" action="{% url 'courses:mark_lesson_complete' lesson.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-check me-1"></i>Mark Complete
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Lesson Text Content -->
+                        {% if lesson.content %}
+                        <div class="lesson-content">
+                            {{ lesson.content|linebreaks }}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Lesson Resources -->
+                        {% if lesson.resources.exists %}
+                        <div class="mt-4">
+                            <h5>Resources</h5>
+                            <div class="list-group">
+                                {% for resource in lesson.resources.all %}
+                                <a href="{{ resource.file.url }}" class="list-group-item list-group-item-action" download>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-file-{{ resource.get_file_icon }} me-2"></i>
+                                            {{ resource.title }}
+                                        </div>
+                                        <small class="text-muted">{{ resource.get_file_size }}</small>
+                                    </div>
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lesson Sidebar -->
+        <div class="col-lg-4">
+            <div class="lesson-sidebar">
+                <div class="p-3 border-bottom">
+                    <h6 class="mb-0">Course Content</h6>
+                    <small class="text-muted">{{ enrollment.progress_percentage|floatformat:0 }}% Complete</small>
+                </div>
+                
+                {% for course_module in course.modules.all %}
+                <div class="border-bottom">
+                    <div class="p-3 bg-light">
+                        <h6 class="mb-1">{{ course_module.title }}</h6>
+                        <small class="text-muted">{{ course_module.lessons.count }} lesson{{ course_module.lessons.count|pluralize }}</small>
+                    </div>
+                    
+                    {% for course_lesson in course_module.lessons.all %}
+                    <div class="lesson-item {% if course_lesson.pk == lesson.pk %}active{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                {% with lesson_prog=enrollment.lessonprogress_set.all %}
+                                    {% for progress in lesson_prog %}
+                                        {% if progress.lesson.pk == course_lesson.pk and progress.completed %}
+                                            <i class="fas fa-check-circle lesson-completed"></i>
+                                        {% elif progress.lesson.pk == course_lesson.pk %}
+                                            <i class="fas fa-play-circle text-primary"></i>
+                                        {% endif %}
+                                    {% empty %}
+                                        {% if course_lesson.pk == lesson.pk %}
+                                            <i class="fas fa-play-circle text-primary"></i>
+                                        {% else %}
+                                            <i class="fas fa-circle text-muted"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <a href="{% url 'courses:lesson_detail' course_lesson.pk %}" 
+                                   class="text-decoration-none {% if course_lesson.pk == lesson.pk %}fw-bold{% endif %}">
+                                    {{ course_lesson.title }}
+                                </a>
+                                {% if course_lesson.duration %}
+                                <div>
+                                    <small class="text-muted">{{ course_lesson.duration }} min</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lesson Navigation -->
+<div class="lesson-navigation fixed-bottom bg-white shadow-lg">
+    <div class="lesson-container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                {% if previous_lesson %}
+                <a href="{% url 'courses:lesson_detail' previous_lesson.pk %}" class="btn btn-outline-primary">
+                    <i class="fas fa-chevron-left me-2"></i>Previous
+                </a>
+                {% endif %}
+            </div>
+            
+            <div class="text-center">
+                <small class="text-muted">
+                    Lesson {{ lesson.order }} of {{ course.modules.all.count }} modules
+                </small>
+            </div>
+            
+            <div>
+                {% if next_lesson %}
+                <a href="{% url 'courses:lesson_detail' next_lesson.pk %}" class="btn btn-primary">
+                    Next<i class="fas fa-chevron-right ms-2"></i>
+                </a>
+                {% else %}
+                <a href="{% url 'courses:course_detail' course.pk %}" class="btn btn-success">
+                    <i class="fas fa-check me-2"></i>Course Complete
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add some padding to prevent overlap with fixed navigation -->
+<div style="height: 80px;"></div>
+{% endblock %}

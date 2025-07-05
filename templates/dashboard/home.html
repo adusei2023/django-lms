@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Welcome to LMS - Learning Management System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">
+                    Learn Without Limits
+                </h1>
+                <p class="lead mb-4">
+                    Discover thousands of courses, develop new skills, and advance your career with our comprehensive learning management system.
+                </p>
+                <div class="d-flex gap-3">
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'users:register' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Get Started
+                        </a>
+                        <a href="{% url 'courses:course_list' %}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-book me-2"></i>
+                            Browse Courses
+                        </a>
+                    {% else %}
+                        <a href="{% url 'dashboard:dashboard' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            Go to Dashboard
+                        </a>
+                        <a href="{% url 'courses:course_list' %}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-book me-2"></i>
+                            Browse Courses
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <i class="fas fa-graduation-cap" style="font-size: 12rem; opacity: 0.1;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-4 mb-4">
+                <div class="card border-0 h-100">
+                    <div class="card-body">
+                        <i class="fas fa-book text-primary mb-3" style="font-size: 3rem;"></i>
+                        <h3 class="fw-bold">{{ total_courses }}</h3>
+                        <p class="text-muted">Courses Available</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card border-0 h-100">
+                    <div class="card-body">
+                        <i class="fas fa-users text-primary mb-3" style="font-size: 3rem;"></i>
+                        <h3 class="fw-bold">{{ total_students }}</h3>
+                        <p class="text-muted">Active Students</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card border-0 h-100">
+                    <div class="card-body">
+                        <i class="fas fa-chalkboard-teacher text-primary mb-3" style="font-size: 3rem;"></i>
+                        <h3 class="fw-bold">{{ total_instructors }}</h3>
+                        <p class="text-muted">Expert Instructors</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Courses Section -->
+{% if featured_courses %}
+<section class="py-5">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h2 class="fw-bold mb-3">Featured Courses</h2>
+                <p class="lead text-muted">Start learning with our most popular courses</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for course in featured_courses %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card course-card h-100">
+                        {% if course.cover_image %}
+                            <img src="{{ course.cover_image.url }}" class="card-img-top" alt="{{ course.title }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="fas fa-book text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <div class="mb-2">
+                                {% if course.category %}
+                                    <span class="badge bg-secondary">{{ course.category.name }}</span>
+                                {% endif %}
+                                <span class="badge bg-primary">{{ course.get_difficulty_level_display }}</span>
+                            </div>
+                            
+                            <h5 class="card-title">{{ course.title }}</h5>
+                            <p class="card-text text-muted">{{ course.short_description }}</p>
+                            
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-user me-1"></i>
+                                        {{ course.instructor.get_full_name }}
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ course.estimated_hours }}h
+                                    </small>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    {% if course.is_free %}
+                                        <span class="h5 mb-0 text-success">Free</span>
+                                    {% else %}
+                                        <span class="h5 mb-0">${{ course.price }}</span>
+                                    {% endif %}
+                                    
+                                    <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-outline-primary">
+                                        View Course
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'courses:course_list' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-arrow-right me-2"></i>
+                View All Courses
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h2 class="fw-bold mb-3">Why Choose Our LMS?</h2>
+                <p class="lead text-muted">Everything you need for effective online learning</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-play-circle fa-2x"></i>
+                    </div>
+                    <h4>Interactive Learning</h4>
+                    <p class="text-muted">Engage with videos, quizzes, and interactive content designed to enhance your learning experience.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                    <h4>Progress Tracking</h4>
+                    <p class="text-muted">Monitor your learning progress with detailed analytics and completion tracking.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-certificate fa-2x"></i>
+                    </div>
+                    <h4>Certificates</h4>
+                    <p class="text-muted">Earn verified certificates upon course completion to showcase your achievements.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-mobile-alt fa-2x"></i>
+                    </div>
+                    <h4>Mobile Friendly</h4>
+                    <p class="text-muted">Learn on any device with our responsive design and mobile-optimized interface.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <h4>Expert Instructors</h4>
+                    <p class="text-muted">Learn from industry experts and experienced professionals in their fields.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <h4>Flexible Schedule</h4>
+                    <p class="text-muted">Learn at your own pace with lifetime access to course materials.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h2 class="fw-bold mb-2">Ready to Start Learning?</h2>
+                <p class="mb-0">Join thousands of students already learning on our platform.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'users:register' %}" class="btn btn-light btn-lg">
+                        <i class="fas fa-rocket me-2"></i>
+                        Start Learning Today
+                    </a>
+                {% else %}
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-light btn-lg">
+                        <i class="fas fa-search me-2"></i>
+                        Explore Courses
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

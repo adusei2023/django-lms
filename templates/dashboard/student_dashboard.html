@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Dashboard - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-2px);
+    }
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+    }
+    .progress-ring {
+        width: 60px;
+        height: 60px;
+    }
+    .course-thumbnail {
+        width: 80px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>Welcome back, {{ user.get_full_name|default:user.username }}!</h2>
+                    <p class="text-muted">Continue your learning journey</p>
+                </div>
+                <div>
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Browse Courses
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">{{ total_enrollments|default:0 }}</h3>
+                            <p class="mb-0">Enrolled Courses</p>
+                        </div>
+                        <i class="fas fa-graduation-cap fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">{{ completed_courses|default:0 }}</h3>
+                            <p class="mb-0">Completed</p>
+                        </div>
+                        <i class="fas fa-certificate fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">{{ in_progress|default:0 }}</h3>
+                            <p class="mb-0">In Progress</p>
+                        </div>
+                        <i class="fas fa-clock fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">{{ recent_quiz_attempts.count|default:0 }}</h3>
+                            <p class="mb-0">Quizzes Taken</p>
+                        </div>
+                        <i class="fas fa-question-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Current Courses -->
+        <div class="col-lg-8">
+            <div class="card dashboard-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Continue Learning</h5>
+                </div>
+                <div class="card-body">
+                    {% if enrollments %}
+                        {% for enrollment in enrollments %}
+                        <div class="d-flex align-items-center mb-3 p-3 border rounded">
+                            {% if enrollment.course.thumbnail %}
+                                <img src="{{ enrollment.course.thumbnail.url }}" class="course-thumbnail me-3" alt="{{ enrollment.course.title }}">
+                            {% else %}
+                                <div class="course-thumbnail bg-light me-3 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-graduation-cap text-muted"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    <a href="{% url 'courses:course_detail' enrollment.course.pk %}" class="text-decoration-none">
+                                        {{ enrollment.course.title }}
+                                    </a>
+                                </h6>
+                                <p class="text-muted small mb-2">
+                                    by {{ enrollment.course.instructor.get_full_name|default:enrollment.course.instructor.username }}
+                                </p>
+                                
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ enrollment.progress_percentage|default:0 }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ enrollment.progress_percentage|default:0|floatformat:0 }}% complete</small>
+                            </div>
+                            
+                            <div class="ms-3">
+                                {% if enrollment.completed_at %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                    <a href="{% url 'courses:course_detail' enrollment.course.pk %}" class="btn btn-sm btn-primary">Continue</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-graduation-cap fa-4x text-muted mb-3"></i>
+                            <h4>No courses enrolled yet</h4>
+                            <p class="text-muted">Start your learning journey by enrolling in a course!</p>
+                            <a href="{% url 'courses:course_list' %}" class="btn btn-primary">Browse Courses</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Recent Quiz Results -->
+            <div class="card dashboard-card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Recent Quiz Results</h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_quiz_attempts %}
+                        {% for attempt in recent_quiz_attempts %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ attempt.quiz.title|truncatechars:30 }}</h6>
+                                <small class="text-muted">{{ attempt.quiz.course.title|truncatechars:25 }}</small>
+                            </div>
+                            <div class="text-end">
+                                {% if attempt.passed %}
+                                    <span class="badge bg-success">{{ attempt.score|floatformat:1 }}%</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ attempt.score|floatformat:1 }}%</span>
+                                {% endif %}
+                                <br>
+                                <small class="text-muted">{{ attempt.completed_at|date:"M d" }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-question-circle fa-2x text-muted mb-2"></i>
+                            <p class="text-muted small">No quiz attempts yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Recommended Courses -->
+            <div class="card dashboard-card">
+                <div class="card-header">
+                    <h6 class="mb-0">Recommended for You</h6>
+                </div>
+                <div class="card-body">
+                    {% if recommended_courses %}
+                        {% for course in recommended_courses %}
+                        <div class="d-flex align-items-center mb-3">
+                            {% if course.thumbnail %}
+                                <img src="{{ course.thumbnail.url }}" class="course-thumbnail me-3" alt="{{ course.title }}">
+                            {% else %}
+                                <div class="course-thumbnail bg-light me-3 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-graduation-cap text-muted"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    <a href="{% url 'courses:course_detail' course.pk %}" class="text-decoration-none">
+                                        {{ course.title|truncatechars:25 }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">{{ course.instructor.get_full_name|default:course.instructor.username }}</small>
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <small class="text-muted">{{ course.total_students }} students</small>
+                                    {% if course.price > 0 %}
+                                        <small class="text-success">${{ course.price }}</small>
+                                    {% else %}
+                                        <small class="text-success">Free</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-lightbulb fa-2x text-muted mb-2"></i>
+                            <p class="text-muted small">Enroll in courses to get recommendations</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

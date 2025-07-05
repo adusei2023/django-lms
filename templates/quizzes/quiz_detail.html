@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ quiz.title }} - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quiz-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+    }
+    .quiz-info-card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .attempt-card {
+        border-left: 4px solid #007bff;
+        margin-bottom: 1rem;
+    }
+    .score-badge {
+        font-size: 1.1em;
+        padding: 0.5rem 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Quiz Header -->
+<div class="quiz-header">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'courses:course_detail' quiz.course.pk %}" class="text-light">{{ quiz.course.title }}</a></li>
+                <li class="breadcrumb-item active text-light">{{ quiz.title }}</li>
+            </ol>
+        </nav>
+        
+        <h1 class="display-5 fw-bold">{{ quiz.title }}</h1>
+        {% if quiz.description %}
+            <p class="lead">{{ quiz.description }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Quiz Information -->
+        <div class="col-lg-8">
+            <div class="card quiz-info-card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Quiz Information</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-clock text-primary me-3"></i>
+                                <div>
+                                    <strong>Time Limit:</strong><br>
+                                    <span class="text-muted">
+                                        {% if quiz.time_limit %}
+                                            {{ quiz.time_limit }} minutes
+                                        {% else %}
+                                            No time limit
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-redo text-primary me-3"></i>
+                                <div>
+                                    <strong>Attempts:</strong><br>
+                                    <span class="text-muted">{{ quiz.max_attempts }} maximum</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-question-circle text-primary me-3"></i>
+                                <div>
+                                    <strong>Questions:</strong><br>
+                                    <span class="text-muted">{{ quiz.questions.count }} question{{ quiz.questions.count|pluralize }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-trophy text-primary me-3"></i>
+                                <div>
+                                    <strong>Passing Score:</strong><br>
+                                    <span class="text-muted">{{ quiz.passing_score }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if can_attempt %}
+                        <div class="mt-4">
+                            <h6>Ready to start?</h6>
+                            <p class="text-muted">Make sure you have a stable internet connection and enough time to complete the quiz.</p>
+                            <a href="{% url 'quizzes:start_quiz' quiz.pk %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-play me-2"></i>Start Quiz
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning mt-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            You have reached the maximum number of attempts for this quiz.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Previous Attempts -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Your Attempts</h6>
+                </div>
+                <div class="card-body">
+                    {% if attempts %}
+                        {% for attempt in attempts %}
+                        <div class="attempt-card card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="text-muted">{{ attempt.started_at|date:"M d, Y H:i" }}</small>
+                                    {% if attempt.completed_at %}
+                                        {% if attempt.passed %}
+                                            <span class="badge bg-success score-badge">{{ attempt.score|floatformat:1 }}%</span>
+                                        {% else %}
+                                            <span class="badge bg-danger score-badge">{{ attempt.score|floatformat:1 }}%</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-warning">Incomplete</span>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if attempt.completed_at %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="small">
+                                            {% if attempt.passed %}
+                                                <i class="fas fa-check-circle text-success me-1"></i>Passed
+                                            {% else %}
+                                                <i class="fas fa-times-circle text-danger me-1"></i>Failed
+                                            {% endif %}
+                                        </span>
+                                        <a href="{% url 'quizzes:quiz_result' attempt.pk %}" class="btn btn-sm btn-outline-primary">View Results</a>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center">
+                                        <a href="{% url 'quizzes:take_quiz' attempt.pk %}" class="btn btn-sm btn-primary">Continue</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        {% if best_score %}
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <div class="text-center">
+                                <strong>Best Score</strong><br>
+                                <span class="h4 text-primary">{{ best_score|floatformat:1 }}%</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No attempts yet</p>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            Attempts remaining: {{ attempts_remaining }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
