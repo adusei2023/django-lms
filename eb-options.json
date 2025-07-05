@@ -1,0 +1,72 @@
+[
+  {
+    "Namespace": "aws:elasticbeanstalk:application:environment",
+    "OptionName": "DJANGO_SETTINGS_MODULE",
+    "Value": "lms_project.settings"
+  },
+  {
+    "Namespace": "aws:elasticbeanstalk:application:environment",
+    "OptionName": "DEBUG",
+    "Value": "False"
+  },
+  {
+    "Namespace": "aws:elasticbeanstalk:container:python",
+    "OptionName": "WSGIPath",
+    "Value": "lms_project.wsgi:application"
+  },
+  {
+    "Namespace": "aws:elasticbeanstalk:container:python",
+    "OptionName": "NumProcesses",
+    "Value": "3"
+  },
+  {
+    "Namespace": "aws:elasticbeanstalk:container:python",
+    "OptionName": "NumThreads",
+    "Value": "20"
+  },
+  {
+    "Namespace": "aws:autoscaling:launchconfiguration",
+    "OptionName": "InstanceType",
+    "Value": "t3.small"
+  },
+  {
+    "Namespace": "aws:autoscaling:asg",
+    "OptionName": "MinSize",
+    "Value": "1"
+  },
+  {
+    "Namespace": "aws:autoscaling:asg",
+    "OptionName": "MaxSize",
+    "Value": "4"
+  },
+  {
+    "Namespace": "aws:elasticbeanstalk:healthreporting:system",
+    "OptionName": "SystemType",
+    "Value": "enhanced"
+  },
+  {
+    "Namespace": "aws:elasticbeanstalk:command",
+    "OptionName": "BatchSize",
+    "Value": "30"
+  },
+  {
+    "Namespace": "aws:elasticbeanstalk:command",
+    "OptionName": "BatchSizeType",
+    "Value": "Percentage"
+  },
+  {
+    "Namespace": "aws:elasticbeanstalk:application",
+    "OptionName": "Application Healthcheck URL",
+    "Value": "/health/"
+  },
+  {
+    "Namespace": "aws:elbv2:loadbalancer",
+    "OptionName": "ManagedSecurityGroup",
+    "Value": "true"
+  },
+  {
+    "Namespace": "aws:elbv2:listener:80",
+    "OptionName": "Protocol",
+    "Value": "HTTP"
+  }
+]
