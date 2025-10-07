@@ -1,0 +1,13 @@
+Contact: mailto:security@your-domain.com
+Expires: 2025-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://your-domain.com/.well-known/security.txt
+
+# Our security policy
+Policy: https://your-domain.com/security-policy
+
+# Security acknowledgments page
+Acknowledgments: https://your-domain.com/security-acknowledgments
+
+# Hiring
+Hiring: https://your-domain.com/careers

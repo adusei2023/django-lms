@@ -31,6 +31,7 @@ django-debug-toolbar==4.2.0
 factory-boy==3.3.0
 pytest==7.4.3
 pytest-django==4.5.2
+coverage==7.3.2
 
 # Email
 django-anymail==10.2
@@ -41,3 +42,20 @@ django-widget-tweaks==1.5.0
 # Utilities
 django-extensions==3.2.3
 django-cleanup==6.0.0
+
+# Caching (Redis)
+redis==5.0.1
+django-redis==5.4.0
+
+# Error Tracking (Optional)
+sentry-sdk==1.38.0
+
+# Security & Code Quality
+bandit==1.7.5
+safety==2.3.5
+
+# Code Formatting (Development)
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+
