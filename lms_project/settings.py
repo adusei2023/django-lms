@@ -208,6 +208,7 @@ if USE_S3:
 # Security Settings (for production)
 if not DEBUG:
     SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=31536000, cast=int)
     SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True, cast=bool)
     SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=True, cast=bool)
@@ -215,6 +216,17 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = config('SECURE_BROWSER_XSS_FILTER', default=True, cast=bool)
     SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=True, cast=bool)
     CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=True, cast=bool)
+    X_FRAME_OPTIONS = 'DENY'
+    CSRF_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_HTTPONLY = True
+    SECURE_REFERRER_POLICY = 'same-origin'
+
+# CSRF Trusted Origins (for production API access)
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='',
+    cast=lambda v: [s.strip() for s in v.split(',') if s.strip()]
+)
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
@@ -222,22 +234,130 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
+# Caching Configuration
+USE_REDIS = config('USE_REDIS', default=False, cast=bool)
+
+if USE_REDIS:
+    REDIS_URL = config('REDIS_URL', default='redis://localhost:6379/0')
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'lms',
+            'TIMEOUT': 300,
+        }
+    }
+    # Use Redis for sessions in production
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+        }
+    }
+
+# Database connection pooling settings
+DATABASES['default']['CONN_MAX_AGE'] = config('DB_CONN_MAX_AGE', default=600, cast=int)
+
 # Logging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
     'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
         'file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': BASE_DIR / 'django.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'django_errors.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
+            'handlers': ['console', 'file'],
+            'level': config('DJANGO_LOG_LEVEL', default='INFO'),
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console', 'error_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['console', 'error_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'users': {
+            'handlers': ['console', 'file'],
             'level': 'INFO',
-            'propagate': True,
+            'propagate': False,
+        },
+        'courses': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'enrollments': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'quizzes': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
 }
+
+# Sentry Error Tracking (Optional)
+SENTRY_DSN = config('SENTRY_DSN', default='')
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=0.1,
+        send_default_pii=False,
+        environment=config('ENVIRONMENT', default='production'),
+    )
